@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nebula · 任务看板</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="ambient">
+    <div class="glow glow--indigo"></div>
+    <div class="glow glow--purple"></div>
+    <div class="noise"></div>
+  </div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand__mark">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2 L20 7 L20 17 L12 22 L4 17 L4 7 Z" />
+          <path d="M12 2 L12 22" opacity="0.5" />
+          <path d="M4 7 L20 17" opacity="0.4" />
+          <path d="M20 7 L4 17" opacity="0.4" />
+        </svg>
+      </div>
+      <div class="brand__text">
+        <span class="brand__name">Nebula</span>
+        <span class="brand__sub">Task Board</span>
+      </div>
+    </div>
+
+    <div class="search">
+      <svg class="search__icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" />
+      </svg>
+      <input id="searchInput" class="search__input" type="text" placeholder="搜索任务、标签…" autocomplete="off" />
+      <kbd class="search__kbd">⌘K</kbd>
+    </div>
+
+    <div class="topbar__actions">
+      <button id="filterBtn" class="ghost-btn" title="筛选优先级">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h18M6 12h12M10 18h4"/></svg>
+        <span>筛选</span>
+      </button>
+      <button id="addBtn" class="primary-btn">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        <span>新建任务</span>
+      </button>
+    </div>
+  </header>
+
+  <div id="filterBar" class="filterbar hidden">
+    <span class="filterbar__label">优先级：</span>
+    <div class="chip-group" id="priorityChips">
+      <button class="chip is-active" data-p="all">全部</button>
+      <button class="chip" data-p="urgent">紧急</button>
+      <button class="chip" data-p="high">高</button>
+      <button class="chip" data-p="medium">中</button>
+      <button class="chip" data-p="low">低</button>
+    </div>
+  </div>
+
+  <main class="board" id="board">
+    <section class="column" data-column="todo" data-id="todo">
+      <div class="column__head">
+        <div class="column__title">
+          <span class="dot dot--todo"></span>
+          <h2>待办</h2>
+          <span class="count" data-count="todo">0</span>
+        </div>
+        <button class="column__add" data-add="todo" title="在此列添加">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      </div>
+      <div class="column__body" data-drop="todo"></div>
+    </section>
+
+    <section class="column" data-column="doing" data-id="doing">
+      <div class="column__head">
+        <div class="column__title">
+          <span class="dot dot--doing"></span>
+          <h2>进行中</h2>
+          <span class="count" data-count="doing">0</span>
+        </div>
+        <button class="column__add" data-add="doing" title="在此列添加">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      </div>
+      <div class="column__body" data-drop="doing"></div>
+    </section>
+
+    <section class="column" data-column="done" data-id="done">
+      <div class="column__head">
+        <div class="column__title">
+          <span class="dot dot--done"></span>
+          <h2>已完成</h2>
+          <span class="count" data-count="done">0</span>
+        </div>
+        <button class="column__add" data-add="done" title="在此列添加">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      </div>
+      <div class="column__body" data-drop="done"></div>
+    </section>
+  </main>
+
+  <footer class="statusbar">
+    <div class="statusbar__left">
+      <span class="pulse"></span>
+      <span id="statusText">就绪</span>
+    </div>
+    <div class="statusbar__right">
+      <span id="totalCount">0</span> 项任务 ·
+      <span id="doneCount">0</span> 已完成 ·
+      进度 <span id="progressPct">0%</span>
+    </div>
+  </footer>
+
+  <!-- 任务编辑面板 -->
+  <div id="overlay" class="overlay hidden">
+    <div class="panel" role="dialog" aria-modal="true">
+      <div class="panel__glow"></div>
+      <header class="panel__head">
+        <h3 id="panelTitle">新建任务</h3>
+        <button id="closePanel" class="icon-btn" title="关闭">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </header>
+      <div class="panel__body">
+        <label class="field">
+          <span class="field__label">标题</span>
+          <input id="fTitle" class="field__input" type="text" placeholder="给任务起个名字…" maxlength="80" />
+        </label>
+        <label class="field">
+          <span class="field__label">描述</span>
+          <textarea id="fDesc" class="field__input field__input--area" placeholder="补充细节、验收标准…" maxlength="400"></textarea>
+        </label>
+        <div class="field-row">
+          <label class="field">
+            <span class="field__label">优先级</span>
+            <div class="seg" id="fPriority">
+              <button type="button" data-v="low">低</button>
+              <button type="button" data-v="medium" class="is-active">中</button>
+              <button type="button" data-v="high">高</button>
+              <button type="button" data-v="urgent">紧急</button>
+            </div>
+          </label>
+          <label class="field">
+            <span class="field__label">标签（逗号分隔）</span>
+            <input id="fTags" class="field__input" type="text" placeholder="前端, 设计" />
+          </label>
+        </div>
+      </div>
+      <footer class="panel__foot">
+        <button id="deleteBtn" class="danger-btn hidden">删除</button>
+        <div class="panel__foot-right">
+          <button id="cancelBtn" class="ghost-btn">取消</button>
+          <button id="saveBtn" class="primary-btn">保存</button>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+  <script src="app.js"></script>
+</body>
+</html>

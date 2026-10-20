@@ -1,0 +1,5 @@
+.agents/
+*.pid
+sts-creds.json
+sts-creds.sh
+__pycache__/
